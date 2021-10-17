@@ -4,7 +4,7 @@ FROM codercom/code-server:3.12.0
 ARG UPD="apt-get update"
 ARG INS="apt-get install"
 ENV PKGS="zip unzip multitail curl lsof wget ssl-cert asciidoctor apt-transport-https ca-certificates gnupg-agent bash-completion build-essential htop jq software-properties-common less llvm locales man-db nano vim ruby-full"
-ENV BUILDS="build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev libbz2-dev"
+ENV BUILDS="build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev libbz2-dev systemd systemd-sysv"
 
 USER root
 
@@ -32,7 +32,7 @@ RUN $INS g++
 USER coder
 RUN sudo apt install golang-go -y
 # install the new golang version
-RUN go install golang.org/dl/go1.17.2@latest && go version
+# RUN go install golang.org/dl/go1.17.2@latest && go version
 
 ### ruby ###
 USER coder
@@ -92,6 +92,9 @@ RUN curl -o /usr/local/bin/docker-compose -fsSL https://github.com/docker/compos
 RUN curl -o /tmp/dive.deb -fsSL https://github.com/wagoodman/dive/releases/download/v0.10.0/dive_0.10.0_linux_amd64.deb \
     && apt install /tmp/dive.deb \
     && rm /tmp/dive.deb
+
+# enables Docker starting with systemd
+RUN systemctl enable docker
 
 ### secman ###
 RUN curl -fsSL https://unix.secman.dev | bash
