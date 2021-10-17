@@ -1,4 +1,5 @@
 FROM debian:latest
+FROM codercom/code-server:3.12.0
 
 ARG UPD="apt-get update"
 ARG INS="apt-get install"
