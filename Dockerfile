@@ -1,6 +1,5 @@
 FROM debian:latest
 FROM codercom/code-server:3.12.0
-FROM golang:1.16-alpine
 
 ARG UPD="apt-get update"
 ARG INS="apt-get install"
