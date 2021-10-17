@@ -1,5 +1,6 @@
 FROM debian:latest
 FROM codercom/code-server:3.12.0
+FROM golang:1.16-alpine
 
 ARG UPD="apt-get update"
 ARG INS="apt-get install"
@@ -10,7 +11,7 @@ USER root
 
 RUN $UPD && $INS -y $PKGS && $UPD && \
     locale-gen en_US.UTF-8 && \
-    mkdir /var/lib/apt/abdcodedoc-marks && \
+    mkdir /var/lib/apt/container-marks && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* && \
     $UPD
 
@@ -30,28 +31,9 @@ RUN $INS g++
 
 ### go ###
 USER coder
-ENV GO_VERSION=1.17.2
-ENV GOPATH=$HOME/go-packages
-ENV GOROOT=$HOME/go
-ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
-RUN curl -fsSL https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.tar.gz | tar xzs && \
-# install VS Code Go tools for use with gopls as per https://github.com/golang/vscode-go/blob/master/docs/tools.md
-# also https://github.com/golang/vscode-go/blob/27bbf42a1523cadb19fad21e0f9d7c316b625684/src/goTools.ts#L139
-    go get -v \
-        github.com/uudashr/gopkgs/cmd/gopkgs@v2 \
-        github.com/ramya-rao-a/go-outline \
-        github.com/cweill/gotests/gotests \
-        github.com/fatih/gomodifytags \
-        github.com/josharian/impl \
-        github.com/haya14busa/goplay/cmd/goplay \
-        github.com/go-delve/delve/cmd/dlv \
-        github.com/golangci/golangci-lint/cmd/golangci-lint && \
-    GO111MODULE=on go get -v \
-        golang.org/x/tools/gopls@v0.7.2 && \
-    sudo rm -rf $GOPATH/src $GOPATH/pkg /home/coder/.cache/go /home/coder/.cache/go-build
-# user Go packages
-ENV GOPATH=/home/coder/go
-ENV PATH=/home/coder/go/bin:$PATH
+RUN sudo apt install golang-go -y
+# install the new golang version
+RUN go install golang.org/dl/go1.17.2@latest && go version
 
 ### ruby ###
 USER coder
