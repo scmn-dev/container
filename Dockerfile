@@ -3,7 +3,7 @@ FROM ubuntu:18.04
 ENV UPG="apt-get upgrade -y"
 ENV UPD="apt-get update"
 ENV INS="apt-get install"
-ENV PKGS="zip unzip multitail curl lsof wget ssl-cert asciidoctor apt-transport-https ca-certificates htop locales procps openssh-client dumb-init gnupg-agent bash-completion build-essential htop jq software-properties-common less llvm locales man-db nano vim ruby-full build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev libbz2-dev systemd systemd-sysv"
+ENV PKGS="zip unzip multitail sudo curl lsof wget ssl-cert asciidoctor apt-transport-https ca-certificates pkg-config htop locales procps openssh-client dumb-init gnupg-agent bash-completion build-essential htop jq software-properties-common less llvm locales man-db nano vim ruby-full build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev libbz2-dev systemd systemd-sysv"
 
 USER root
 
@@ -15,11 +15,16 @@ RUN $UPD && $INS -y $PKGS && $UPD && \
 
 RUN $UPG
 
+RUN sed -i "s/# en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen \
+  && locale-gen
+
 ENV LANG=en_US.UTF-8
 
-WORKDIR /home/coder/
+### create `coder` user ###
+RUN adduser --gecos '' --disabled-password coder && \
+  echo "coder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nopasswd
 
-### nodejs & npm ###
+### nodejs & npm and yarn ###
 USER root
 RUN curl -sL https://deb.nodesource.com/setup_16.x -o nodesource_setup.sh && \
     bash nodesource_setup.sh && \
@@ -27,9 +32,11 @@ RUN curl -sL https://deb.nodesource.com/setup_16.x -o nodesource_setup.sh && \
     rm -rf nodesource_setup.sh && \
     $UPD
 
+RUN npm i -g yarn
+
 ### install C/C++ compiler and associated tools ###
 USER root
-RUN $INS g++
+RUN $INS g++ gcc
 
 ### go ###
 USER coder
@@ -133,5 +140,29 @@ RUN brew install gh
 USER root
 RUN curl https://getmic.ro | bash && \
     mv micro /usr/local/bin
+
+### code-server ###
+RUN git clone https://github.com/cdr/code-server
+# RUN cp -rf code-server/ci/* .
+RUN ./ci/build/build-packages.sh
+RUN ARCH="$(dpkg --print-architecture)" && \
+    curl -fsSL "https://github.com/boxboat/fixuid/releases/download/v0.5/fixuid-0.5-linux-$ARCH.tar.gz" | tar -C /usr/local/bin -xzf - && \
+    chown root:root /usr/local/bin/fixuid && \
+    chmod 4755 /usr/local/bin/fixuid && \
+    mkdir -p /etc/fixuid && \
+    printf "user: coder\ngroup: coder\n" > /etc/fixuid/config.yml
+
+COPY release-packages/code-server*.deb /tmp/
+COPY ci/release-image/entrypoint.sh /usr/bin/entrypoint.sh
+RUN dpkg -i /tmp/code-server*$(dpkg --print-architecture).deb && rm /tmp/code-server*.deb
+
+EXPOSE 8080
+# This way, if someone sets $DOCKER_USER, docker-exec will still work as
+# the uid will remain the same. note: only relevant if -u isn't passed to
+# docker-run.
+USER 1000
+ENV USER=coder
+WORKDIR /home/coder
+ENTRYPOINT ["/usr/bin/entrypoint.sh", "--bind-addr", "0.0.0.0:8080", "."]
 
 USER coder
