@@ -64,6 +64,7 @@ ENV GEM_PATH=$GEM_HOME:$GEM_PATH
 ENV PATH=/home/coder/.rvm/bin:$PATH
 
 ### rust ###
+WORKDIR /home/coder
 USER coder
 RUN cp /home/coder/.profile /home/coder/.profile_orig && \
     curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.55.0 \
