@@ -124,13 +124,8 @@ RUN sudo rm -rf $src
 COPY $src .
 
 ### homebrew ###
-USER coder
-ENV TRIGGER_BREW_REBUILD=4
 RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-ENV PATH=$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin/
-ENV MANPATH="$MANPATH:/home/linuxbrew/.linuxbrew/share/man"
-ENV INFOPATH="$INFOPATH:/home/linuxbrew/.linuxbrew/share/info"
-ENV HOMEBREW_NO_AUTO_UPDATE=1
+ENV PATH /home/linuxbrew/.linuxbrew/bin:${PATH}
 
 ### github cli ###
 USER coder
@@ -144,7 +139,7 @@ RUN curl https://getmic.ro | bash && \
 ### code-server ###
 RUN git clone https://github.com/cdr/code-server
 # RUN cp -rf code-server/ci/* .
-RUN ./ci/build/build-packages.sh
+RUN ./code-server/ci/build/build-packages.sh
 RUN ARCH="$(dpkg --print-architecture)" && \
     curl -fsSL "https://github.com/boxboat/fixuid/releases/download/v0.5/fixuid-0.5-linux-$ARCH.tar.gz" | tar -C /usr/local/bin -xzf - && \
     chown root:root /usr/local/bin/fixuid && \
@@ -153,7 +148,7 @@ RUN ARCH="$(dpkg --print-architecture)" && \
     printf "user: coder\ngroup: coder\n" > /etc/fixuid/config.yml
 
 COPY release-packages/code-server*.deb /tmp/
-COPY ci/release-image/entrypoint.sh /usr/bin/entrypoint.sh
+COPY ./code-server/ci/release-image/entrypoint.sh /usr/bin/entrypoint.sh
 RUN dpkg -i /tmp/code-server*$(dpkg --print-architecture).deb && rm /tmp/code-server*.deb
 
 EXPOSE 8080
