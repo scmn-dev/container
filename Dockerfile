@@ -33,7 +33,7 @@ RUN $INS g++
 
 ### go ###
 USER coder
-RUN sudo apt install golang-go -y
+RUN apt install golang-go -y
 # install the new golang version
 # RUN go install golang.org/dl/go1.17.2@latest && go version
 
