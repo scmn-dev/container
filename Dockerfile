@@ -1,10 +1,9 @@
-FROM ubuntu:latest
-FROM codercom/code-server:3.12.0
+FROM ubuntu:18.04
 
-ARG UPD="apt-get update"
-ARG INS="apt-get install"
-ENV PKGS="zip unzip multitail curl lsof wget ssl-cert asciidoctor apt-transport-https ca-certificates gnupg-agent bash-completion build-essential htop jq software-properties-common less llvm locales man-db nano vim ruby-full"
-ENV BUILDS="build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev libbz2-dev systemd systemd-sysv"
+ENV UPG="apt-get upgrade -y"
+ENV UPD="apt-get update"
+ENV INS="apt-get install"
+ENV PKGS="zip unzip multitail curl lsof wget ssl-cert asciidoctor apt-transport-https ca-certificates htop locales procps openssh-client dumb-init gnupg-agent bash-completion build-essential htop jq software-properties-common less llvm locales man-db nano vim ruby-full build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev libbz2-dev systemd systemd-sysv"
 
 USER root
 
@@ -14,7 +13,11 @@ RUN $UPD && $INS -y $PKGS && $UPD && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* && \
     $UPD
 
+RUN $UPG
+
 ENV LANG=en_US.UTF-8
+
+WORKDIR /home/coder/
 
 ### nodejs & npm ###
 USER root
@@ -93,7 +96,7 @@ RUN curl -o /tmp/dive.deb -fsSL https://github.com/wagoodman/dive/releases/downl
     && apt install /tmp/dive.deb \
     && rm /tmp/dive.deb
 
-# enables Docker starting with systemd
+# enables docker starting with systemd
 RUN systemctl enable docker
 
 ### secman ###
@@ -109,10 +112,8 @@ RUN zsh && \
     git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting && \
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
-### rm old ~/.zshrc ###
+# modify ~/.zshrc
 RUN sudo rm -rf $src
-
-### wget new files ###
 COPY $src .
 
 ### homebrew ###
