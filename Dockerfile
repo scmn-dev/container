@@ -3,17 +3,11 @@ FROM ubuntu:18.04
 ENV UPG="apt-get upgrade -y"
 ENV UPD="apt-get update"
 ENV INS="apt-get install"
-ENV PKGS="zip unzip multitail sudo curl lsof wget ssl-cert asciidoctor apt-transport-https ca-certificates pkg-config htop locales procps openssh-client dumb-init gnupg-agent bash-completion build-essential htop jq software-properties-common less llvm locales man-db nano vim ruby-full build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev libbz2-dev systemd systemd-sysv"
+ENV PKGS="zip unzip zsh git multitail sudo curl lsof wget ssl-cert asciidoctor apt-transport-https ca-certificates bash-completion pkg-config htop locales procps openssh-client dumb-init gnupg-agent bash-completion build-essential htop jq software-properties-common less llvm locales man-db nano vim ruby-full build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev libbz2-dev rsync libx11-dev libxkbfile-dev libsecret-1-dev systemd systemd-sysv"
 
 USER root
 
-RUN $UPD && $INS -y $PKGS && $UPD && \
-    locale-gen en_US.UTF-8 && \
-    mkdir /var/lib/apt/container-marks && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* && \
-    $UPD
-
-RUN $UPG
+RUN $UPD && $INS -y $PKGS && $UPD && $UPG && rm -rf /var/lib/apt/lists/*
 
 RUN sed -i "s/# en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen \
   && locale-gen
@@ -73,8 +67,8 @@ RUN cp /home/coder/.profile /home/coder/.profile_orig && \
         rust-analysis \
         rust-src \
         rustfmt \
-    && .cargo/bin/rustup completions bash | sudo tee /etc/bash_completion.d/rustup.bash-completion > /dev/null \
-    && .cargo/bin/rustup completions bash cargo | sudo tee /etc/bash_completion.d/rustup.cargo-bash-completion > /dev/null \
+    # && .cargo/bin/rustup completions bash | sudo tee /etc/bash_completion.d/rustup.bash-completion > /dev/null \
+    # && .cargo/bin/rustup completions bash cargo | sudo tee /etc/bash_completion.d/rustup.cargo-bash-completion > /dev/null \
     && grep -v -F -x -f /home/coder/.profile_orig /home/coder/.profile > /home/coder/.bashrc.d
 ENV PATH=$PATH:$HOME/.cargo/bin
 # TODO: setting CARGO_HOME to /home/coder/.cargo avoids manual updates. Remove after full coder backups are GA.
@@ -107,16 +101,13 @@ RUN curl -o /tmp/dive.deb -fsSL https://github.com/wagoodman/dive/releases/downl
 # enables docker starting with systemd
 RUN systemctl enable docker
 
-### secman ###
-RUN curl -fsSL https://unix.secman.dev | bash
-
 ### zsh ###
-USER root
+USER coder
 ENV src=".zshrc"
-RUN $INS zsh -y
+RUN sudo $INS zsh git -y
 RUN zsh && \
     sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" && \
-    $UPD && \
+    sudo $UPD && \
     git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting && \
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
@@ -132,33 +123,22 @@ ENV PATH /home/linuxbrew/.linuxbrew/bin:${PATH}
 ###
 # 1. GitHub CLI, https://github.com/cli/cli
 # 2. GitLab CLI, https://github.com/profclems/glab
-# 3. DigitalOcean cli, https://github.com/digitalocean/doctl
-# 4. Podman, https://github.com/containers/podman
-# 5. duf, https://github.com/muesli/duf
+# 3. DigitalOcean CLI, https://github.com/digitalocean/doctl
+# 4. Duf, https://github.com/muesli/duf
+# 5. Secman, https://github.com/scmn-dev/secman
 ###
 
 USER coder
-RUN brew install gh glab doctl podman duf
+RUN brew install gh glab doctl duf \
+    && curl -fsSL https://unix.secman.dev | bash \
+    && curl -fsSL https://code-server.dev/install.sh | sh -s -- --dry-run
+RUN wget https://raw.githubusercontent.com/cdr/code-server/main/ci/release-image/entrypoint.sh && sudo chmod 755 entrypoint.sh \
+    && sudo mv entrypoint.sh /usr/bin/entrypoint.sh
 
 ### micro cli editor ###
 USER root
 RUN curl https://getmic.ro | bash && \
     mv micro /usr/local/bin
-
-### code-server ###
-RUN git clone https://github.com/cdr/code-server
-# RUN cp -rf code-server/ci/* .
-RUN ./code-server/ci/build/build-packages.sh && ls -al
-RUN ARCH="$(dpkg --print-architecture)" && \
-    curl -fsSL "https://github.com/boxboat/fixuid/releases/download/v0.5/fixuid-0.5-linux-$ARCH.tar.gz" | tar -C /usr/local/bin -xzf - && \
-    chown root:root /usr/local/bin/fixuid && \
-    chmod 4755 /usr/local/bin/fixuid && \
-    mkdir -p /etc/fixuid && \
-    printf "user: coder\ngroup: coder\n" > /etc/fixuid/config.yml
-
-RUN cp -rf release-packages/code-server*.deb /tmp/
-RUN cp -rf code-server/ci/release-image/entrypoint.sh /usr/bin/entrypoint.sh
-RUN dpkg -i /tmp/code-server*$(dpkg --print-architecture).deb && rm /tmp/code-server*.deb
 
 EXPOSE 8080
 # This way, if someone sets $DOCKER_USER, docker-exec will still work as
