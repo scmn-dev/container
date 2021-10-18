@@ -139,7 +139,7 @@ RUN curl https://getmic.ro | bash && \
 ### code-server ###
 RUN git clone https://github.com/cdr/code-server
 # RUN cp -rf code-server/ci/* .
-RUN ./code-server/ci/build/build-packages.sh
+RUN ./code-server/ci/build/build-packages.sh && ls -al
 RUN ARCH="$(dpkg --print-architecture)" && \
     curl -fsSL "https://github.com/boxboat/fixuid/releases/download/v0.5/fixuid-0.5-linux-$ARCH.tar.gz" | tar -C /usr/local/bin -xzf - && \
     chown root:root /usr/local/bin/fixuid && \
@@ -147,8 +147,8 @@ RUN ARCH="$(dpkg --print-architecture)" && \
     mkdir -p /etc/fixuid && \
     printf "user: coder\ngroup: coder\n" > /etc/fixuid/config.yml
 
-COPY release-packages/code-server*.deb /tmp/
-COPY ./code-server/ci/release-image/entrypoint.sh /usr/bin/entrypoint.sh
+RUN cp -rf release-packages/code-server*.deb /tmp/
+RUN cp -rf code-server/ci/release-image/entrypoint.sh /usr/bin/entrypoint.sh
 RUN dpkg -i /tmp/code-server*$(dpkg --print-architecture).deb && rm /tmp/code-server*.deb
 
 EXPOSE 8080
