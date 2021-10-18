@@ -131,9 +131,18 @@ ENV PATH /home/linuxbrew/.linuxbrew/bin:${PATH}
 USER coder
 RUN brew install gh glab doctl duf \
     && curl -fsSL https://unix.secman.dev | bash \
-    && curl -fsSL https://code-server.dev/install.sh | sh -s -- --dry-run
+    && curl -fsSL https://code-server.dev/install.sh | sh
 RUN wget https://raw.githubusercontent.com/cdr/code-server/main/ci/release-image/entrypoint.sh && sudo chmod 755 entrypoint.sh \
     && sudo mv entrypoint.sh /usr/bin/entrypoint.sh
+
+### install fixuid ###
+USER root
+RUN ARCH="$(dpkg --print-architecture)" && \
+    curl -fsSL "https://github.com/boxboat/fixuid/releases/download/v0.5/fixuid-0.5-linux-$ARCH.tar.gz" | tar -C /usr/local/bin -xzf - && \
+    chown root:root /usr/local/bin/fixuid && \
+    chmod 4755 /usr/local/bin/fixuid && \
+    mkdir -p /etc/fixuid && \
+    printf "user: coder\ngroup: coder\n" > /etc/fixuid/config.yml
 
 ### micro cli editor ###
 USER root
