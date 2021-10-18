@@ -64,7 +64,7 @@ ENV GEM_PATH=$GEM_HOME:$GEM_PATH
 ENV PATH=/home/coder/.rvm/bin:$PATH
 
 ### rust ###
-WORKDIR /home/coder
+WORKDIR /home/coder/
 USER coder
 RUN cp /home/coder/.profile /home/coder/.profile_orig && \
     curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.55.0 \
@@ -128,9 +128,17 @@ COPY $src .
 RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ENV PATH /home/linuxbrew/.linuxbrew/bin:${PATH}
 
-### github cli ###
+### install some usefull cli apps ###
+###
+# 1. GitHub CLI, https://github.com/cli/cli
+# 2. GitLab CLI, https://github.com/profclems/glab
+# 3. DigitalOcean cli, https://github.com/digitalocean/doctl
+# 4. Podman, https://github.com/containers/podman
+# 5. duf, https://github.com/muesli/duf
+###
+
 USER coder
-RUN brew install gh
+RUN brew install gh glab doctl podman duf
 
 ### micro cli editor ###
 USER root
