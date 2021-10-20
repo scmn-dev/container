@@ -18,7 +18,7 @@ ENV LANG=en_US.UTF-8
 RUN adduser --gecos '' --disabled-password coder && \
   echo "coder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nopasswd
 
-### nodejs & npm and yarn ###
+### nodejs, npm and yarn ###
 USER root
 RUN curl -sL https://deb.nodesource.com/setup_16.x -o nodesource_setup.sh && \
     bash nodesource_setup.sh && \
@@ -35,7 +35,7 @@ RUN $INS g++ gcc
 ### go ###
 USER coder
 RUN wget -O go.tar.gz https://golang.org/dl/go1.17.2.linux-amd64.tar.gz \
-    && sudo chmod 755 go.tar.gz
+    && sudo chmod 755 go.tar.gz \
     && tar -xf go.tar.gz \
     && sudo chown -R root:root ./go \
     && sudo mv -v go /usr/local \
