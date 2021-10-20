@@ -35,6 +35,7 @@ RUN $INS g++ gcc
 ### go ###
 USER coder
 RUN wget -O go.tar.gz https://golang.org/dl/go1.17.2.linux-amd64.tar.gz \
+    && sudo chmod 755 go.tar.gz
     && tar -xf go.tar.gz \
     && sudo chown -R root:root ./go \
     && sudo mv -v go /usr/local \
@@ -55,7 +56,6 @@ RUN curl -fsSL https://rvm.io/mpapis.asc | gpg --import - \
         && gem install solargraph --no-document" \
     && echo '[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*' >> /home/coder/.bashrc.d
 RUN echo "rvm_gems_path=/home/coder/.rvm" > ~/.rvmrc
-
 ENV GEM_HOME=/home/coder/.rvm
 ENV GEM_PATH=$GEM_HOME:$GEM_PATH
 ENV PATH=/home/coder/.rvm/bin:$PATH
