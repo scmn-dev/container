@@ -34,9 +34,12 @@ RUN $INS g++ gcc
 
 ### go ###
 USER coder
-RUN sudo apt install golang-go -y
-# install the new golang version
-# RUN go install golang.org/dl/go1.17.2@latest && go version
+RUN wget -O go.tar.gz https://golang.org/dl/go1.17.2.linux-amd64.tar.gz \
+    && tar -xf go.tar.gz \
+    && sudo chown -R root:root ./go \
+    && sudo mv -v go /usr/local \
+    && echo "export GOPATH=$HOME/go\nexport PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile \
+    && source ~/.profile
 
 ### ruby ###
 USER coder
@@ -80,26 +83,26 @@ RUN sudo mkdir -p $CARGO_HOME \
 
 RUN bash -lc "cargo install cargo-watch cargo-edit cargo-tree cargo-workspaces"
 
-### docker ###
-USER root
-ENV TRIGGER_REBUILD=3
-# https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script
-RUN curl -fsSL https://get.docker.com -o get-docker.sh
-RUN sh get-docker.sh
+# ### docker ###
+# USER root
+# ENV TRIGGER_REBUILD=3
+# # https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script
+# RUN curl -fsSL https://get.docker.com -o get-docker.sh
+# RUN sh get-docker.sh
 
-RUN curl -o /usr/bin/slirp4netns -fsSL https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.12/slirp4netns-$(uname -m) \
-    && chmod +x /usr/bin/slirp4netns
+# RUN curl -o /usr/bin/slirp4netns -fsSL https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.12/slirp4netns-$(uname -m) \
+#     && chmod +x /usr/bin/slirp4netns
 
-RUN curl -o /usr/local/bin/docker-compose -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64 \
-    && chmod +x /usr/local/bin/docker-compose
+# RUN curl -o /usr/local/bin/docker-compose -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64 \
+#     && chmod +x /usr/local/bin/docker-compose
 
-### docker:dive ###
-RUN curl -o /tmp/dive.deb -fsSL https://github.com/wagoodman/dive/releases/download/v0.10.0/dive_0.10.0_linux_amd64.deb \
-    && apt install /tmp/dive.deb \
-    && rm /tmp/dive.deb
+# ### docker:dive ###
+# RUN curl -o /tmp/dive.deb -fsSL https://github.com/wagoodman/dive/releases/download/v0.10.0/dive_0.10.0_linux_amd64.deb \
+#     && apt install /tmp/dive.deb \
+#     && rm /tmp/dive.deb
 
-# enables docker starting with systemd
-RUN systemctl enable docker
+# # enables docker starting with systemd
+# RUN systemctl enable docker
 
 ### zsh ###
 USER coder
@@ -134,6 +137,7 @@ RUN brew install gh glab doctl duf \
     && curl -fsSL https://code-server.dev/install.sh | sh
 RUN wget https://raw.githubusercontent.com/cdr/code-server/main/ci/release-image/entrypoint.sh && sudo chmod 755 entrypoint.sh \
     && sudo mv entrypoint.sh /usr/bin/entrypoint.sh
+RUN alias code="code-server"
 
 ### install fixuid ###
 USER root
