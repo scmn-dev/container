@@ -85,25 +85,25 @@ RUN sudo mkdir -p $CARGO_HOME \
 RUN bash -lc "cargo install cargo-watch cargo-edit cargo-tree cargo-workspaces"
 
 # ### docker ###
-# USER root
-# ENV TRIGGER_REBUILD=3
-# # https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script
-# RUN curl -fsSL https://get.docker.com -o get-docker.sh
-# RUN sh get-docker.sh
+USER root
+ENV TRIGGER_REBUILD=3
+# https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script
+RUN curl -fsSL https://get.docker.com -o get-docker.sh
+RUN sh get-docker.sh
 
-# RUN curl -o /usr/bin/slirp4netns -fsSL https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.12/slirp4netns-$(uname -m) \
-#     && chmod +x /usr/bin/slirp4netns
+RUN curl -o /usr/bin/slirp4netns -fsSL https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.12/slirp4netns-$(uname -m) \
+    && chmod +x /usr/bin/slirp4netns
 
-# RUN curl -o /usr/local/bin/docker-compose -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64 \
-#     && chmod +x /usr/local/bin/docker-compose
+RUN curl -o /usr/local/bin/docker-compose -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64 \
+    && chmod +x /usr/local/bin/docker-compose
 
-# ### docker:dive ###
-# RUN curl -o /tmp/dive.deb -fsSL https://github.com/wagoodman/dive/releases/download/v0.10.0/dive_0.10.0_linux_amd64.deb \
-#     && apt install /tmp/dive.deb \
-#     && rm /tmp/dive.deb
+### docker:dive ###
+RUN curl -o /tmp/dive.deb -fsSL https://github.com/wagoodman/dive/releases/download/v0.10.0/dive_0.10.0_linux_amd64.deb \
+    && apt install /tmp/dive.deb \
+    && rm /tmp/dive.deb
 
-# # enables docker starting with systemd
-# RUN systemctl enable docker
+# enables docker starting with systemd
+RUN systemctl enable docker
 
 ### zsh ###
 USER coder
@@ -122,6 +122,9 @@ COPY $src .
 ### homebrew ###
 RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ENV PATH /home/linuxbrew/.linuxbrew/bin:${PATH}
+
+### golang ###
+RUN brew install go
 
 ### install some usefull cli apps ###
 ###
