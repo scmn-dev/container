@@ -32,17 +32,6 @@ RUN npm i -g yarn
 USER root
 RUN $INS g++ gcc
 
-### go ###
-WORKDIR /home/coder/
-USER root
-RUN wget -O go.tar.gz https://golang.org/dl/go1.17.2.linux-amd64.tar.gz \
-    && sudo chmod 755 go.tar.gz \
-    && tar -xf go.tar.gz \
-    && sudo chown -R root:root ./go \
-    && sudo mv -v go /usr/local \
-    && echo "export GOPATH=$HOME/go\nexport PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> .profile \
-    && source .profile
-
 ### ruby ###
 USER coder
 RUN curl -fsSL https://rvm.io/mpapis.asc | gpg --import - \
